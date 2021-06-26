@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  dev:
+
+    build:
+      context: ./telegram-rep-bot
+      dockerfile: ../Dockerfile_dev
+    container_name: reptracker_dev
+
+    environment:
+      - CGO_ENABLED=1
+      - BOT_TOKEN=""
+
+    ports:
+      - 8080:8080
+
+    volumes:
+      - ./telegram-rep-bot:/app
+      - ./data:/data
+
