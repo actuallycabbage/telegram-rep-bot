@@ -118,11 +118,6 @@ func Connect(config *Config) (*DB, error) {
 
 }
 
-//func (*DB) GetAssociatedAccount(chatID int64) (*account, error) {
-//	return nil, ErrNotImplemented
-//}
-//
-
 func (self *DB) CreateChatLink(chatID int64, accountID uint) (*telegram_chat_link, error) {
 	log.Printf("Creating chat link for chat %d and account %d\n", chatID, accountID)
 
@@ -260,4 +255,42 @@ func (self *DB) CreateRepEvent(chatID int64, targetID int64, requesterID int64, 
 	}
 
 	return p, nil
+}
+
+type LeaderboardEntry struct {
+	UserID int64
+	Rep    int
+}
+
+func (self *DB) GetChatRep(chatID int64, order string, limit int) []LeaderboardEntry {
+	// Make sure that limit is > 0
+
+	var query string
+	switch order {
+	case "asc":
+		query = "select target_user_id, sum(rep_change) from rep_events where telegram_chat_id = ? group by target_user_id order by sum(rep_change) asc limit ?"
+		break
+	case "desc":
+		query = "select target_user_id, sum(rep_change) from rep_events where telegram_chat_id = ? group by target_user_id order by sum(rep_change) desc limit ?"
+		break
+	}
+
+	rows, err := self.db.Raw(query, chatID, limit).Rows()
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	var l []LeaderboardEntry
+
+	defer rows.Close()
+	for rows.Next() {
+		buffer := LeaderboardEntry{}
+		rows.Scan(&buffer.UserID, &buffer.Rep)
+		l = append(l, buffer)
+	}
+
+	return l
+
 }
