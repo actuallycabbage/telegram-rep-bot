@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"regexp"
+	"strings"
 )
 
 // Attempts to match the target string with any of the regex expressions in the conditions slice
@@ -13,7 +14,7 @@ func regexMatchArray(conditions *[]string, target *string) (bool, error) {
 		// Attempt to match
 		result, err := regexp.MatchString(condition, *target)
 
-		// Issues?
+		// Issues
 		if err != nil {
 			return false, errors.New("Regex compile failed for " + condition)
 		}
@@ -26,4 +27,15 @@ func regexMatchArray(conditions *[]string, target *string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// Check if slice contains item
+func arrayContains(item string, array []string) bool {
+	for _, val := range array {
+		if strings.Compare(val, item) == 0 {
+			return true
+		}
+	}
+
+	return false
 }
