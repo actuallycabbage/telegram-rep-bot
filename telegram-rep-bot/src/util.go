@@ -2,8 +2,13 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"regexp"
 	"strings"
+	"telegram_rep_tracker/db"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 // Attempts to match the target string with any of the regex expressions in the conditions slice
@@ -38,4 +43,39 @@ func arrayContains(item string, array []string) bool {
 	}
 
 	return false
+}
+
+func renderLeaderboard(board []db.LeaderboardEntry, chatID int64) string {
+	// Find padding so they're all in line.
+	var padding int
+
+	padding = len(fmt.Sprintf("%d", board[0].Rep))
+
+	p := len(fmt.Sprintf("%d", board[len(board)-1].Rep))
+
+	if p > padding {
+		padding = p
+	}
+
+	var entries []string
+
+	for _, val := range board {
+		// TODO: Seriously need to cache this!!!!
+		user, err := Bot.GetChatMember(tgbotapi.GetChatMemberConfig{
+			ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
+				ChatID: chatID,
+				UserID: val.UserID,
+			},
+		})
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		s := fmt.Sprintf("`%"+fmt.Sprintf("%d", padding+1)+"v `", val.Rep) + fmt.Sprintf("[%s %s](tg://user?id=%d)", user.User.FirstName, user.User.LastName, val.UserID)
+
+		entries = append(entries, s)
+	}
+
+	return strings.Join(entries, "\n")
 }
