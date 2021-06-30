@@ -12,19 +12,10 @@ import (
 )
 
 var (
-	DB                *db.DB
-	Bot               *tgbotapi.BotAPI
-	UserRepCooldowns  = make(map[int64]map[int64]time.Time) // NOTE: This doesn't work if multiple instances.
-	RepCooldownLength time.Duration                         // TODO: Move this into settings?
+	DB               *db.DB
+	Bot              *tgbotapi.BotAPI
+	UserRepCooldowns = make(map[int64]map[int64]time.Time) // NOTE: This doesn't work if multiple instances.
 )
-
-func init() {
-	var err error
-	RepCooldownLength, err = time.ParseDuration("3s")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-}
 
 func main() {
 	var err error
@@ -218,11 +209,17 @@ func repHandler(msg *tgbotapi.Message, settings *db.AccountSettings) error {
 		DB.CreateRepEvent(msg.Chat.ID, msg.ReplyToMessage.From.ID, msg.From.ID, repchange, m)
 		log.Printf("Rep change (%d) of '%s' type for user %d triggered by %d on chat %d", repchange, m["trigger"], msg.ReplyToMessage.From.ID, msg.From.ID, msg.Chat.ID)
 
+		// Fetch the duration from the settings
+		length, err := time.ParseDuration(settings.Rep.Cooldown.Duration)
+		if err != nil {
+			log.Println(err.Error())
+		}
+
 		// Add a cooldown for the user
 		if UserRepCooldowns[msg.Chat.ID] == nil {
 			UserRepCooldowns[msg.Chat.ID] = make(map[int64]time.Time)
 		}
-		UserRepCooldowns[msg.Chat.ID][msg.From.ID] = time.Now().Add(RepCooldownLength)
+		UserRepCooldowns[msg.Chat.ID][msg.From.ID] = time.Now().Add(length)
 	}
 	return nil
 }

@@ -34,12 +34,18 @@ type AccountSettings struct {
 }
 
 type AccountRepSettings struct {
-	Enabled          bool     `json:"enabled"`
-	Silent           bool     `json:"silent"`
-	PositiveTriggers []string `json:"positiveTriggers"`
-	PositiveStickers []string `json:"positiveStickers"`
-	NegativeTriggers []string `json:"negativeTriggers"`
-	NegativeStickers []string `json:"negativeStickers"`
+	Enabled          bool                        `json:"enabled"`
+	Silent           bool                        `json:"silent"`
+	Cooldown         *AccountRepCooldownSettings `json:"cooldown"`
+	PositiveTriggers []string                    `json:"positiveTriggers"`
+	PositiveStickers []string                    `json:"positiveStickers"`
+	NegativeTriggers []string                    `json:"negativeTriggers"`
+	NegativeStickers []string                    `json:"negativeStickers"`
+}
+
+type AccountRepCooldownSettings struct {
+	Enabled  bool   `json:"enabled"`
+	Duration string `json:"duration"`
 }
 
 type telegram_chat_link struct {
