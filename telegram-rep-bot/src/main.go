@@ -44,7 +44,7 @@ func main() {
 	updates := Bot.GetUpdatesChan(u)
 
 	for update := range updates {
-		go updateHandler(&update)
+		updateHandler(&update)
 
 	}
 }
