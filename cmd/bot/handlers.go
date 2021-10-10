@@ -2,54 +2,12 @@ package main
 
 import (
 	"log"
-	"os"
-	"strconv"
-	"strings"
-	"telegram_rep_tracker/db"
 	"time"
+
+	"github.com/actuallycabbage/telegram-rep-bot/internal/db"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
-
-var (
-	DB               *db.DB
-	Bot              *tgbotapi.BotAPI
-	UserRepCooldowns = make(map[int64]map[int64]time.Time) // NOTE: This doesn't work if multiple instances.
-)
-
-func main() {
-	var err error
-
-	// Connect to databse
-	DB, err = db.Connect(&db.Config{
-		Type:             "sqlite",
-		ConnectionString: "/data/testing.db",
-	})
-
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	// Start up the bot
-	Bot, err = tgbotapi.NewBotAPI(os.Getenv("BOT_TOKEN"))
-	if err != nil {
-		log.Panic(err)
-	}
-
-	log.Printf("Authorized on bot: %s", Bot.Self.UserName)
-
-	// Configure polling settings
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	// Start updating polling goroutine
-	updates := Bot.GetUpdatesChan(u)
-
-	for update := range updates {
-		updateHandler(&update)
-
-	}
-}
 
 // Process telegram update events
 func updateHandler(update *tgbotapi.Update) {
@@ -76,35 +34,12 @@ func updateHandler(update *tgbotapi.Update) {
 
 // Process commands
 func commandHandler(msg *tgbotapi.Message, settings *db.AccountSettings) error {
-	var leaderboardLimit = 10
-
-	// TODO: Check if there's an argument for toprep/ bottomrep
-	arguments := strings.Fields(msg.CommandArguments())
-
-	if len(arguments) > 0 {
-		i, err := strconv.Atoi(arguments[0])
-		if err == nil {
-			leaderboardLimit = i
-		}
-	}
-
-	// Send message template
-	m := tgbotapi.MessageConfig{
-		BaseChat: tgbotapi.BaseChat{
-			ChatID:           msg.Chat.ID,
-			ReplyToMessageID: 0,
-		},
-		ParseMode: "MarkdownV2",
-	}
-
 	switch msg.Command() {
 	case "toprep":
-		m.Text = renderLeaderboard(DB.GetChatRep(msg.Chat.ID, "desc", leaderboardLimit), msg.Chat.ID)
-		Bot.Send(m)
+		toprepCommandHandler(msg, settings)
 		break
 	case "bottomrep":
-		m.Text = renderLeaderboard(DB.GetChatRep(msg.Chat.ID, "asc", leaderboardLimit), msg.Chat.ID)
-		Bot.Send(m)
+		bottomrepCommandHandler(msg, settings)
 		break
 	default:
 		break

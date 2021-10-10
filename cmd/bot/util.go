@@ -6,7 +6,8 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"telegram_rep_tracker/db"
+
+	"github.com/actuallycabbage/telegram-rep-bot/internal/db"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
